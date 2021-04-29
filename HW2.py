@@ -4,10 +4,11 @@ import math
 class Node:
     
 
-    def __init__(self,sequense,leftchild,rightchild):
+    def __init__(self,sequense,leftchild,rightchild,number=None):
         self.sequense=sequense 
         self.leftchild=leftchild
         self.rightchild=rightchild
+        self.number=number
 
 def global_align(x, y, s_match, s_mismatch, s_gap):
     A = []
@@ -86,7 +87,7 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
             elif len(leafs)<=2:
                 mininnew=[[0,0,1]]
     
-    print(mininnew)
+    # print(mininnew)
     if(len(mininnew) >1):
         temp=mininnew[0]
         minnum=min(temp[1],temp[2])
@@ -101,6 +102,9 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
 
     return newdistancematrix,mininnew
 
+def updateDistanceMatrix(leafs,distanceMatrix,distanceMatrixMax,mininnew):
+    sau = distanceMatrix[mininnew[1]][mininnew[2]]
+
 def updateConsensus(inputnode,consensus,sequenses):
     if (inputnode.leftchild != None):
         updateConsensus(inputnode.leftchild,consensus,sequenses)
@@ -109,7 +113,11 @@ def updateConsensus(inputnode,consensus,sequenses):
     newseq=""
     counter=0
     for char in consensus:
-        if (char == '-' and inputnode.sequense[counter] != '-'):
+        # print(inputnode.sequense , " /// ", consensus, " /// ",char," /// ",newseq, " /// ", counter)
+        if (counter>=len(inputnode.sequense)):
+            newseq += '-'
+        elif (char == '-' and inputnode.sequense[counter] != '-'):
+        # if (char == '-' and inputnode.sequense[counter] != '-'):
             newseq+='-'
         else:
             newseq += inputnode.sequense[counter]
@@ -131,7 +139,7 @@ def doAlignmentInTree (leafs,mininMD):
     updateConsensus(leftnode,alignmentresult[0],consensusarray)
     updateConsensus(rightnode,alignmentresult[1],consensusarray)
 
-    print(consensusarray)
+    # print(consensusarray)
     cons = findconsensus(consensusarray)
     parentNode = Node(cons,leftnode,rightnode)
     leafs.append(parentNode)
@@ -158,31 +166,67 @@ def findconsensus(sequenses):
     return consensus
 
 def scoringMSA(msa):
-    print("1")
+    numberOfSequenses = len(msa)
+    
+    msaScore = 0
+    for char in range(len(msa[0])):
 
+        for c1 in range(numberOfSequenses):
+            for c2 in range(numberOfSequenses):
+                if (c1 < c2):
+                    if (msa[c1][char] == '-' or msa[c2][char] == '-'):
+                        msaScore +=-2
+                    elif (msa[c1][char] ==msa[c2][char]):
+                        msaScore +=1
+                    else:
+                        msaScore +=-1
+    
+    return msaScore
 
+def findingMSA(node):
+    msa = []
+    if (node.leftchild != None):
+        res = findingMSA(node.leftchild)
+        if (len(res) !=0):
+            for item in res:
+                msa.append(item)
+    if (node.rightchild != None):
+        res = findingMSA(node.rightchild)
+        if (len(res) !=0):
+            for item in res:
+                msa.append(item)
+    if (node.number != None):
+        print(node.number)
+        msa.append(node)
+    return msa
+        
+def returnnumber(leaf):
+    return leaf.number
 
 
 def __main__():
     
     # print (global_align('HVLIP','HVLP',1,-1,-2))
 
-    # seqnumber = int(input())
-    seqnumber = 4
+    seqnumber = int(input())
+    # seqnumber = 4
 
-    # sequenses = []
-    sequenses = ['HVLIP','HMIP','HVLP','LVLIP']
+    sequenses = []
+    # sequenses = ['HVLIP','HMIP','HVLP','LVLIP']
 
-    # for i in range(seqnumber) :
-    #     sequenses.append(input())
+    for i in range(seqnumber) :
+        sequenses.append(input())
     # print (sequenses)
     leafs = []
     for seq in sequenses:
-        leafs.append( Node(seq,None,None) )
+        leafs.append( Node(seq,None,None,sequenses.index(seq)) )
     # for leaf in leafs:
     #     print(leaf.sequense)
     # print(len(newnodes))
     # while seqnumber>1:
+    distanceMatrix = None
+    distanceMatrixMax = None
+
     while len(leafs)>1:
         # seqnumber=2
         
@@ -200,10 +244,11 @@ def __main__():
         #             distanceMatrix[i][j] = distanceMatrix[j][i]
         #             distanceMatrixMax[i] +=distanceMatrix[i][j]
 
+        # if (distanceMatrix == None and distanceMatrixMax == None):
         distanceMatrix,distanceMatrixMax = makeDistanceMatrix(leafs)
                 
-        print(distanceMatrix)
-        print(distanceMatrixMax)
+        # print(distanceMatrix)
+        # print(distanceMatrixMax)
 
         # newdistancematrix = [[0 for c in range(seqnumber)] for r in range(seqnumber)]
         # mininnew = [999999999,None,None]
@@ -215,8 +260,8 @@ def __main__():
         #                 mininnew=[newdistancematrix[i][j],i,j]
         newdistancematrix,mininnew = makeNewDM(leafs,distanceMatrix,distanceMatrixMax)
 
-        print (newdistancematrix)
-        print (mininnew)
+        # print (newdistancematrix)
+        # print (mininnew)
 
         print('----------------------------------')
         print('leafs (before):')
@@ -240,9 +285,16 @@ def __main__():
         print('leafs (after):')
         for leaf in leafs:
             print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
+
+        
         
         if len(leafs)==1:
-            print(msa)
+            msssa = findingMSA(leafs[0])
+            msssa.sort(key=returnnumber)
+            for ll in msssa:
+                print(ll.sequense)
+                # print(ll.sequense," /// ",ll.number)
+            print(scoringMSA(msa))
 
 
         
