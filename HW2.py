@@ -2,10 +2,7 @@ import numpy
 import math
 
 class Node:
-    # def __init__(self,sequense):
-    #     self.sequense=sequense
-    #     self.leftchild=None
-    #     self.rightchild=None
+    
 
     def __init__(self,sequense,leftchild,rightchild):
         self.sequense=sequense 
@@ -57,22 +54,6 @@ def global_align(x, y, s_match, s_mismatch, s_gap):
             j = j - 1
     return (align_X, align_Y,A[len(y)][len(x)])
 
-def findconsensus(sequenses):
-    consensus =""
-    for char in range(len(sequenses[0])):
-        charlist = []
-        for s in sequenses:
-            if (s[char] == '-'):
-                charlist.append('}}')
-            else:
-                charlist.append(s[char])
-        minchar = min(charlist)
-        if (minchar=='}}'):
-            minchar = '-'
-        consensus += min(charlist)
-    
-    return consensus
-
 def makeDistanceMatrix(leafs):
     distanceMatrix =[[0 for c in range(len(leafs))] for r in range(len(leafs))]
     distanceMatrixMax = [0 for c in range(len(leafs))]
@@ -96,12 +77,14 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
     mininnew = [[999999999,None,None]]
     for i in range(len(leafs)):
         for j in range(len(leafs)):
-            if (i!=j):
+            if (i!=j) and len(leafs)>2:
                 newdistancematrix[i][j] = distanceMatrix[i][j] - ((distanceMatrixMax[i] + distanceMatrixMax[j])/(len(leafs)-2))
                 if (mininnew[0][0]>newdistancematrix[i][j]):
                     mininnew=[[newdistancematrix[i][j],i,j]]
                 elif (mininnew[0][0] == newdistancematrix[i][j]):
                     mininnew.append([newdistancematrix[i][j],i,j])
+            elif len(leafs)<=2:
+                mininnew=[[0,0,1]]
     
     print(mininnew)
     if(len(mininnew) >1):
@@ -113,8 +96,70 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
                 minnum=min(temp[1],temp[2])
         
         mininnew=temp
+    else:
+        mininnew = mininnew[0]
 
     return newdistancematrix,mininnew
+
+def updateConsensus(inputnode,consensus,sequenses):
+    if (inputnode.leftchild != None):
+        updateConsensus(inputnode.leftchild,consensus,sequenses)
+    if (inputnode.rightchild != None):
+        updateConsensus(inputnode.rightchild,consensus,sequenses)
+    newseq=""
+    counter=0
+    for char in consensus:
+        if (char == '-' and inputnode.sequense[counter] != '-'):
+            newseq+='-'
+        else:
+            newseq += inputnode.sequense[counter]
+            counter +=1
+    # print('new: ',newseq," /old: ",inputnode.sequense)
+    inputnode.sequense=newseq
+
+    if ((inputnode.leftchild == None) and (inputnode.rightchild == None)):
+        sequenses.append(inputnode.sequense)
+
+
+
+def doAlignmentInTree (leafs,mininMD):
+    leftnode= leafs[mininMD[1]]
+    rightnode= leafs[mininMD[2]]
+    alignmentresult = global_align(leftnode.sequense,rightnode.sequense,1,-1,-2)
+
+    consensusarray = []
+    updateConsensus(leftnode,alignmentresult[0],consensusarray)
+    updateConsensus(rightnode,alignmentresult[1],consensusarray)
+
+    print(consensusarray)
+    cons = findconsensus(consensusarray)
+    parentNode = Node(cons,leftnode,rightnode)
+    leafs.append(parentNode)
+    leafs.remove(leftnode)
+    leafs.remove(rightnode)
+    return consensusarray
+
+
+
+def findconsensus(sequenses):
+    consensus =""
+    for char in range(len(sequenses[0])):
+        charlist = []
+        for s in sequenses:
+            if (s[char] == '-'):
+                charlist.append('}}')
+            else:
+                charlist.append(s[char])
+        minchar = min(charlist)
+        if (minchar=='}}'):
+            minchar = '-'
+        consensus += min(charlist)
+    
+    return consensus
+
+def scoringMSA(msa):
+    print("1")
+
 
 
 
@@ -137,8 +182,8 @@ def __main__():
     # for leaf in leafs:
     #     print(leaf.sequense)
     # print(len(newnodes))
-    while seqnumber>1:
-    # while len(leafs)>1:
+    # while seqnumber>1:
+    while len(leafs)>1:
         # seqnumber=2
         
         # distanceMatrix =[[0 for c in range(seqnumber)] for r in range(seqnumber)]
@@ -172,14 +217,38 @@ def __main__():
 
         print (newdistancematrix)
         print (mininnew)
+
+        print('----------------------------------')
+        print('leafs (before):')
+        for leaf in leafs:
+            print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
         
-        newalignment = global_align(sequenses[mininnew[1]],sequenses[mininnew[2]],1,-1,-2)
-        # print(sequenses[1][3]) 
+        # newalignment = global_align(leafs[mininnew[1]].sequense,leafs[mininnew[2]].sequense,1,-1,-2)
+        
+        
 
-        print (findconsensus(['abcd','-avf','jd-e']))
+        # print (findconsensus([newalignment[0],newalignment[1]]))
+
+        # leafs.append(Node(findconsensus([newalignment[0],newalignment[1]]),leafs[mininnew[1]],leafs[mininnew[2]]))
+
+        # leafs.remove(leafs[mininnew[1]])
+        # leafs.remove(leafs[mininnew[2]])
+
+        msa = doAlignmentInTree(leafs,mininnew)
+
+        print('----------------------------------')
+        print('leafs (after):')
+        for leaf in leafs:
+            print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
+        
+        if len(leafs)==1:
+            print(msa)
 
 
-        seqnumber =1
+        
+        # updateConsensus(Node('A-BCD',None,None),'A-B-EE')
+        
+        # seqnumber =1
 
     
     
