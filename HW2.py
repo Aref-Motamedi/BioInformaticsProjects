@@ -1,5 +1,11 @@
 import numpy
 import math
+from collections import Counter
+
+
+def returnchar(obj):
+    return obj[0]
+
 
 class Node:
     
@@ -79,14 +85,20 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
     for i in range(len(leafs)):
         for j in range(len(leafs)):
             if (i!=j) and len(leafs)>2:
-                newdistancematrix[i][j] = distanceMatrix[i][j] - ((distanceMatrixMax[i] + distanceMatrixMax[j])/(len(leafs)-2))
+                newdistancematrix[i][j] = distanceMatrix[i][j] - ((distanceMatrixMax[i] + distanceMatrixMax[j]) / (len(leafs)-2))
                 if (mininnew[0][0]>newdistancematrix[i][j]):
                     mininnew=[[newdistancematrix[i][j],i,j]]
                 elif (mininnew[0][0] == newdistancematrix[i][j]):
                     mininnew.append([newdistancematrix[i][j],i,j])
             elif len(leafs)<=2:
                 mininnew=[[0,0,1]]
-    
+    # print("&&&&&&&&&&&&&&&&&&&&&")
+    # for row in newdistancematrix:
+    #     print(row)
+    # print("$$$$$$")
+    # for row in distanceMatrix:
+    #     print(row)
+    # print("$$$$$$")
     # print(mininnew)
     if(len(mininnew) >1):
         temp=mininnew[0]
@@ -100,37 +112,69 @@ def makeNewDM (leafs,distanceMatrix,distanceMatrixMax):
     else:
         mininnew = mininnew[0]
 
+    # print(leafs[mininnew[1]].sequense ," ### ", leafs[mininnew[2]].sequense)
+
     return newdistancematrix,mininnew
 
 def updateDistanceMatrix(leafs,distanceMatrix,distanceMatrixMax,mininnew,distancesToMinNodes):
 
-    distanceMatrix1 =[[0 for c in range(len(leafs))] for r in range(len(leafs))]
-    distanceMatrixMax1 = [0 for c in range(len(leafs))]
-    for i in range(len(leafs)-1):
-        for j in range(len(leafs)-1):
-            if (i==j):
-                distanceMatrix1[i][j] =None
-                distanceMatrixMax1[i] +=0
-            elif (distanceMatrix1[j][i] == 0):
-                distanceMatrix1[i][j] = global_align(leafs[i].sequense,leafs[j].sequense,1,-1,-2)[2]
-                distanceMatrixMax1[i] +=distanceMatrix1[i][j]
-            else:
-                distanceMatrix1[i][j] = distanceMatrix1[j][i]
-                distanceMatrixMax1[i] +=distanceMatrix1[i][j]
+    # distanceMatrix1 =[[0 for c in range(len(leafs))] for r in range(len(leafs))]
+    distanceMatrix1 = []
+    # distanceMatrixMax1 = [0 for c in range(len(leafs))]
+    distanceMatrixMax1 =[]
+    for i in range(len(distanceMatrix)):
+        dist_Arr = []
+        if (i != mininnew[1] and i != mininnew[2]):
+                
+            for j in range(len(distanceMatrix)):
+                # if (i==j):
+                #     distanceMatrix1[i][j] =None
+                #     distanceMatrixMax1[i] +=0
+                # elif (distanceMatrix1[j][i] == 0):
+                #     distanceMatrix1[i][j] = global_align(leafs[i].sequense,leafs[j].sequense,1,-1,-2)[2]
+                #     distanceMatrixMax1[i] +=distanceMatrix1[i][j]
+                # else:
+                #     distanceMatrix1[i][j] = distanceMatrix1[j][i]
+                #     distanceMatrixMax1[i] +=distanceMatrix1[i][j]
+
+                if (j != mininnew[1] and j != mininnew[2]):
+                    dist_Arr.append(distanceMatrix[i][j])
+            sumnum =0
+            
+            for j in range(len(dist_Arr)):
+                if (dist_Arr[j] != None):
+                    sumnum += dist_Arr[j]
+            
+            distanceMatrix1.append(dist_Arr)
+            distanceMatrixMax1.append(sumnum)
+
+
+    # print("hoyooooyyy ",len(distanceMatrix1),len(distanceMatrix1[0]),len(leafs))
 
     # sau = (distanceMatrix[mininnew[1]][mininnew[2]] / 2) + ((distanceMatrixMax[mininnew[1]] - distanceMatrixMax[2]) / (2(len(leafs) - 2))) 
     # sbu = (distanceMatrix[mininnew[1]][mininnew[2]] - sau)
     
+    dist_Arr = []
+    maxnum=0
     for i in range(len(leafs)-1):
-        distanceMatrix1[i][len(leafs)-1] = (distancesToMinNodes[0][i] + distancesToMinNodes[1][i] - distanceMatrix[mininnew[1]][mininnew[2]])/2
-        distanceMatrix1[len(leafs)-1][i] = distanceMatrix1[i][len(leafs)-1]
+        
+        distanceMatrix1[i].append( (distancesToMinNodes[0][i] + distancesToMinNodes[1][i] - distanceMatrix[mininnew[1]][mininnew[2]])/2 )
+        # distanceMatrix1[len(leafs)-1][i] = distanceMatrix1[i][len(leafs)-1]
+        dist_Arr.append( distanceMatrix1[i][len(leafs)-1] )
         distanceMatrixMax1[i] +=distanceMatrix1[i][len(leafs)-1]
-        distanceMatrixMax1[len(leafs)-1] +=distanceMatrix1[i][len(leafs)-1]
+        # distanceMatrixMax1[len(leafs)-1] +=distanceMatrix1[i][len(leafs)-1]
+        maxnum +=distanceMatrix1[i][len(leafs)-1]
 
-    distanceMatrix1[len(leafs)-1][len(leafs)-1] = None
+    
+    distanceMatrix1.append(dist_Arr)
+    distanceMatrixMax1.append(maxnum)
 
-    distanceMatrix = distanceMatrix1
-    distanceMatrixMax = distanceMatrixMax1
+
+    distanceMatrix1[len(leafs)-1].append(None)
+
+    # distanceMatrix = distanceMatrix1
+    # distanceMatrixMax = distanceMatrixMax1
+    return distanceMatrix1,distanceMatrixMax1
 
 
 
@@ -162,14 +206,27 @@ def updateConsensus(inputnode,consensus,sequenses):
 def doAlignmentInTree (leafs,mininMD):
     leftnode= leafs[mininMD[1]]
     rightnode= leafs[mininMD[2]]
+    # print(" /// LEFT: ",leftnode.sequense, "       /// RIGHT: ",rightnode.sequense)
+    
     alignmentresult = global_align(leftnode.sequense,rightnode.sequense,1,-1,-2)
 
     consensusarray = []
     updateConsensus(leftnode,alignmentresult[0],consensusarray)
     updateConsensus(rightnode,alignmentresult[1],consensusarray)
+    # if (rightnode.number !=None and leftnode.number != None):
+    #     if (leftnode.number == 0 or leftnode.number == 4):
+    #         if (rightnode.number == 0 or rightnode.number == 4):
+    # print ("kkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+    # print (consensusarray)
+    # print(alignmentresult[0])
+    # print(alignmentresult[1])
 
     # print(consensusarray)
+
     cons = findconsensus(consensusarray)
+
+    # print(" /// CONS /// ",cons)
+
     parentNode = Node(cons,leftnode,rightnode)
     leafs.append(parentNode)
     leafs.remove(leftnode)
@@ -187,12 +244,39 @@ def findconsensus(sequenses):
                 charlist.append('}}')
             else:
                 charlist.append(s[char])
-        minchar = min(charlist)
+        
+        
+
+        words_to_count = (word for word in charlist if word[:1].isupper())
+        counterlist = Counter(words_to_count)
+        charlist =counterlist.most_common(10) 
+        # maxnumber =0
+        charlist.sort(key= returnchar)
+
+        # char_counter = {}
+        # for ch in charlist:
+        #     if ch in char_counter:
+        #         char_counter[ch] +=1
+        #     else:
+        #         char_counter[ch] =1
+        # char_counter = sorted(char_counter,key=char_counter.get , reverse=True)
+
+        # print("=================")
+        # print(char_counter)
+
+        # minchar = char_counter[0]
+        # if (minchar=='}}' and len(char_counter)>1 ):
+        #     minchar = char_counter[1]
+        # if (minchar=='}}'):
+        #     minchar = '-'
+        
+        minchar = charlist[0][0]
         if (minchar=='}}'):
             minchar = '-'
-        consensus += min(charlist)
+        consensus += minchar
     
     return consensus
+
 
 def scoringMSA(msa):
     numberOfSequenses = len(msa)
@@ -225,7 +309,7 @@ def findingMSA(node):
             for item in res:
                 msa.append(item)
     if (node.number != None):
-        print(node.number)
+        # print(node.number)
         msa.append(node)
     return msa
         
@@ -257,72 +341,52 @@ def __main__():
     distanceMatrixMax = None
 
     while len(leafs)>1:
-        # seqnumber=2
         
-        # distanceMatrix =[[0 for c in range(seqnumber)] for r in range(seqnumber)]
-        # distanceMatrixMax = [0 for c in range(seqnumber)]
-        # for i in range(seqnumber):
-        #     for j in range(seqnumber):
-        #         if (i==j):
-        #             distanceMatrix[i][j] =None
-        #             distanceMatrixMax[i] +=0
-        #         elif (distanceMatrix[j][i] == 0):
-        #             distanceMatrix[i][j] = global_align(sequenses[i],sequenses[j],1,-1,-2)[2]
-        #             distanceMatrixMax[i] +=distanceMatrix[i][j]
-        #         else:
-        #             distanceMatrix[i][j] = distanceMatrix[j][i]
-        #             distanceMatrixMax[i] +=distanceMatrix[i][j]
 
         if (distanceMatrix == None and distanceMatrixMax == None):
             distanceMatrix,distanceMatrixMax = makeDistanceMatrix(leafs)
+        # distanceMatrix,distanceMatrixMax = makeDistanceMatrix(leafs)
                 
         # print(distanceMatrix)
         # print(distanceMatrixMax)
 
-        # newdistancematrix = [[0 for c in range(seqnumber)] for r in range(seqnumber)]
-        # mininnew = [999999999,None,None]
-        # for i in range(seqnumber):
-        #     for j in range(seqnumber):
-        #         if (i!=j):
-        #             newdistancematrix[i][j] = distanceMatrix[i][j] - ((distanceMatrixMax[i] + distanceMatrixMax[j])/(seqnumber-2))
-        #             if (mininnew[0]>newdistancematrix[i][j]):
-        #                 mininnew=[newdistancematrix[i][j],i,j]
+        
         newdistancematrix,mininnew = makeNewDM(leafs,distanceMatrix,distanceMatrixMax)
 
         # print (newdistancematrix)
         # print (mininnew)
+
         distancesToMinNodes = [[],[]]
         for i1 in range(len(leafs)):
             if (i1 != mininnew[1] and i1 != mininnew[2]):
                 distancesToMinNodes[0].append(distanceMatrix[mininnew[1]][i1])
                 distancesToMinNodes[1].append(distanceMatrix[mininnew[2]][i1])
-
-
-        print('----------------------------------')
-        print('leafs (before):')
-        for leaf in leafs:
-            print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
         
-        # newalignment = global_align(leafs[mininnew[1]].sequense,leafs[mininnew[2]].sequense,1,-1,-2)
+        # print(distancesToMinNodes)
+        # print("*************************")
+        # for row in distanceMatrix:
+        #     print(row)
+        # print("*************************")
         
-        
+        # print(distanceMatrixMax)
 
-        # print (findconsensus([newalignment[0],newalignment[1]]))
 
-        # leafs.append(Node(findconsensus([newalignment[0],newalignment[1]]),leafs[mininnew[1]],leafs[mininnew[2]]))
-
-        # leafs.remove(leafs[mininnew[1]])
-        # leafs.remove(leafs[mininnew[2]])
+        # print('----------------------------------')
+        # print('leafs (before):')
+        # for leaf in leafs:
+        #     print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
 
         msa = doAlignmentInTree(leafs,mininnew)
 
-        print('----------------------------------')
-        print('leafs (after):')
-        for leaf in leafs:
-            print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
+        # print('----------------------------------')
+        # print('leafs (after):')
+        # for leaf in leafs:
+        #     print(leafs.index(leaf),"-----",leaf.sequense , "--",leaf.rightchild, "--",leaf.leftchild)
 
-        
-        updateDistanceMatrix(leafs,distanceMatrix,distanceMatrixMax,mininnew,distancesToMinNodes)
+        distanceMatrix,distanceMatrixMax = updateDistanceMatrix(leafs,distanceMatrix,distanceMatrixMax,mininnew,distancesToMinNodes)
+
+        # print(distanceMatrix)
+        # print(distanceMatrixMax)
 
         
         if len(leafs)==1:
@@ -330,30 +394,10 @@ def __main__():
             msssa.sort(key=returnnumber)
             for ll in msssa:
                 print(ll.sequense)
-                # print(ll.sequense," /// ",ll.number)
             print(scoringMSA(msa))
 
 
-        
-        # updateConsensus(Node('A-BCD',None,None),'A-B-EE')
-        
-        # seqnumber =1
-
     
-    
-    # distanceMatrix1 = distanceMatrix
-    # guidetree = []
-    # for c in range(math.ceil(seqnumber/2)):
-    #     minInDistanceM = [99999999,0,0]
-    #     for i in range(seqnumber):
-    #         for j in range(seqnumber):
-    #             if ((i!=j) and distanceMatrix1[i][j]<minInDistanceM[0] and distanceMatrix1[i][j]!=None):
-    #                 minInDistanceM = [distanceMatrix1[i][j],i,j]
-    #     # dis
-    #     guidetree.append(minInDistanceM[1])
-    #     guidetree.append(minInDistanceM[2])
-
-
 
 
 __main__()

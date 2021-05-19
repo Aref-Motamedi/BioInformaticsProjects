@@ -17,5 +17,10 @@ In this repository, I will put all my projects.
     -with a gap penalty of -5
     and using PAM250 dictionary
 
-++ HW2 file created
+++ HW2 file added
     Must be a global alignment (CLUSTAL) using python
+    - Not a perfect solution :(
+
+++ HW3 file created
+    Must be a profile creation for a given MSA
+    
