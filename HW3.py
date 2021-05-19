@@ -1,10 +1,12 @@
-
-
-from typing import Sequence
+aminoAcid =['A','R','N','D','C','Q','E','G','H','I','L','K','M','F','P','S','T','W','Y','V','X','Z','J','U']
+dnaPro = ['A','T','C','G']
 
 def printMatrix(matrix):
     for row in matrix:
-        print(row)  
+        print(row) 
+
+def returnScore(elem):
+    return elem[1]  
 
 def probabilityMatrix(sequences):
 
@@ -12,41 +14,59 @@ def probabilityMatrix(sequences):
     pseudocount = 1
 
     probMat = {}
-    alphabet = []
+    alphabet = dnaPro
 
     for seq in sequences:
         for c in seq:
             if not (c in alphabet):
-                alphabet.append(c)
+                alphabet = aminoAcid
+    alphabet.append('-')
+    
     
     for char in alphabet:
         probMat[char] = [0 for i in range(seqlen+1)]
     
     for i in range(len(sequences)):
         seq = sequences[i]
-        for c in seq:
-            probMat[c][i]+=1
+        for c in range(seqlen):
+            probMat[seq[c]][c]+=1
     
     for char in alphabet:
         probMat[char][seqlen] = sum(probMat[char][0:seqlen])
     
-    print(probMat)
+    # print(probMat)
 
     for char in alphabet:
         for i in range(seqlen):
             ## B is thought to be alphabet Characters
-            probMat[char][i] = (probMat[char][i] + pseudocount)/( len(sequences) + (len(alphabet)*pseudocount))
+            probMat[char][i] = (probMat[char][i] + pseudocount)/( len(sequences) + ((len(alphabet)-1)*pseudocount))
     
     # print(probMat)
     return alphabet, probMat
 
 
 
+
 def findProfile(query,alphabet,probMat,seqLen):
-    
+    scores = [[None,0] for i in range(len(query)-seqLen+1) ]
     for i in range(len(query)-seqLen+1):
-        print(query[i])
+        
+        flag = True
+
+        for j in range(seqLen):
+            if not(query[i+j] in alphabet):
+                flag=False
+        
+        if (flag == True):
+            for j in range(seqLen):
+                scores[i][1] += probMat[query[i+j]][j]
+        else:
+            scores[i][1] = None
+        scores[i][0] = query[i:i+seqLen]
     
+    scores.sort(key=returnScore,reverse=True)
+    return scores[0]
+        
     
 
 
@@ -63,8 +83,10 @@ def __main__():
     seqLen=len(sequences[0])
     alphabet, probMat = probabilityMatrix(sequences)
 
-    findProfile(querySeq,alphabet,probMat,seqLen)
+    # print(probMat)
 
+    profile = findProfile(querySeq,alphabet,probMat,seqLen)
+    print(profile[0])
     
     
     
