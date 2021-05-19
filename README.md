@@ -21,6 +21,5 @@ In this repository, I will put all my projects.
     Must be a global alignment (CLUSTAL) using python
     - Not a perfect solution :(
 
-++ HW3 file created
-    Must be a profile creation for a given MSA
-    
+++ HW3 file added
+    Find best possible profile for a given MSA from a given sequence
