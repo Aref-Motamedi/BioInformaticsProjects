@@ -1,5 +1,5 @@
 
-aminoAcid =['A','R','N','D','C','Q','E','G','H','I','L','K','M','F','P','S','T','W','Y','V','X','Z','J','U']
+aminoAcid =['A','O','B','R','N','D','C','Q','E','G','H','I','L','K','M','F','P','S','T','W','Y','V','Z','J','U']
 
 
 def newInputRegex(inputregex):
@@ -19,12 +19,12 @@ def newInputRegex(inputregex):
 def getCharacters(string):
     result = []
     if string == 'X':
-        result = aminoAcid
+        result = aminoAcid.copy()
     elif string.startswith('['):
         for i in range(len(string)-2):
             result.append(string[i+1])
     elif string.startswith('{'):
-        result = aminoAcid
+        result = aminoAcid.copy()
         for i in range(len(string)-2):
             result.remove(string[i+1])
     else:
@@ -68,9 +68,5 @@ def __main__():
         else:
             print('Yes',seqResult)
 
-
-
-    # print(inputcharachters)
-    # print(getCharacters('K'))
 
 __main__()

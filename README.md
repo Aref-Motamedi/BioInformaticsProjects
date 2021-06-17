@@ -23,3 +23,9 @@ In this repository, I will put all my projects.
 
 ++ HW3 file added
     Find best possible profile for a given MSA from a given sequence
+
+++ HW4 one code added.
+    HW4-regex: get a regular expression which is a protein motif and domain, then gets some sequenses and checks if they match this regex or not.
+    + more than two differences means a MISMATCH
+    + returns a map that says which protein is a match and which is not!
+    
