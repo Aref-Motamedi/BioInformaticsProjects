@@ -47,10 +47,6 @@ def smallParsimony(nodes,collumn):
                     sv[nodes.index(nod)][alpha] = 1
 
     
-    # for nod in nodes:
-    #     print(sv[nodes.index(nod)])
-    # print("")
-    
     flag = True
     if 0 in tag:
         flag=False
@@ -68,55 +64,27 @@ def smallParsimony(nodes,collumn):
                 child2 = nod.children[1]
 
                 temp = min(sv[nodes.index(child1)].values())
-                minSVson = [key for key in sv[nodes.index(child1)] if sv[nodes.index(child1)][key] == temp]
-                
-                if (len(minSVson) == 1):
-                    # print(nodes.index(nod))
-                    price=0
-                    if alpha != minSVson[0] : 
-                        price = 1
-                    minSon += temp
-                    minSon += price
+                temp2 = min(sv[nodes.index(child2)].values())
 
+                minForChild1 = 0
+                minForChild2 = 0
+                if (temp>sv[nodes.index(child1)][alpha]-2):
+                    minForChild1 =sv[nodes.index(child1)][alpha]
                 else:
-                    newSV = {'A': 99999,'C' : 99999,'G' : 99999,'T' : 99999}
-                    for key in minSVson:
-                        price=0
-                        if alpha != key : 
-                            price = 1
-                        minSon1 = temp
-                        minSon1 += price
-                        newSV[alpha] = minSon1
-
-                temp = min(sv[nodes.index(child2)].values())
-                minSVson = [key for key in sv[nodes.index(child2)] if sv[nodes.index(child2)][key] == temp]
+                    minForChild1 = temp+1
                 
-                if (len(minSVson) == 1):
-                    # print(nodes.index(nod))
-                    price=0
-                    if alpha != minSVson[0] : 
-                        price = 1
-                    minSon += temp
-                    minSon += price
-
+                
+                if (temp2>sv[nodes.index(child2)][alpha]-2):
+                    minForChild2 =sv[nodes.index(child2)][alpha]
                 else:
-                    newSV = {'A': 99999,'C' : 99999,'G' : 99999,'T' : 99999}
-                    for key in minSVson:
-                        price=0
-                        if alpha != key : 
-                            price = 1
-                        minSon += temp
-                        minSon += price
-                        newSV[alpha] = minSon
-                    
-                    minSon = min(newSV.values())
-                sv[nodes.index(nod)][alpha] = minSon
+                    minForChild2 = temp2+1
+
+                sv[nodes.index(nod)][alpha] = minForChild1 + minForChild2
             
             if(nod.sequence == None):
                 nod.sequence = ''
             nod.sequence +=min(sv[nodes.index(nod)].items(), key=lambda x: x[1])[0]
-            # print(nodes.index(nod),sv[nodes.index(nod)])
-
+    
     # print(collumn)
     # for nod in nodes:
     #     print(sv[nodes.index(nod)])
@@ -150,9 +118,12 @@ def __main__():
         seqLength = len(inp[1])    
     
     leastPrice = 0
+    # resSeq = ''
     for i in range(seqLength):
         leastPrice += smallParsimony(nodes,i)[1]
+        # resSeq += smallParsimony(nodes,i)[0]
     print(leastPrice)
+    # print(resSeq)
 
     
 
