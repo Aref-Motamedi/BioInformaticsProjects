@@ -28,4 +28,7 @@ In this repository, I will put all my projects.
     HW4-regex: get a regular expression which is a protein motif and domain, then gets some sequenses and checks if they match this regex or not.
     + more than two differences means a MISMATCH
     + returns a map that says which protein is a match and which is not!
+
+    HW4-parsimony: gets a tree with sequences for leafs. then runs the SMALL PARSIMONY algorithm on it and finds the minimum number of mutations for this tree
+    
     
